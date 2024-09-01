@@ -26,7 +26,10 @@ export async function POST(request: NextRequest) {
 
     // Combine the Christian context with the conversation history and the new prompt
     const fullPrompt = `${CHRISTIAN_CONTEXT}\n\n${messages
-      .map((m) => `${m.role === "user" ? "User" : "AI"}: ${m.content}`)
+      .map(
+        (m: { role: string; content: any }) =>
+          `${m.role === "user" ? "User" : "AI"}: ${m.content}`
+      )
       .join("\n")}\nUser: ${prompt}\nAI:`;
 
     const result = await model.generateContent(fullPrompt);
