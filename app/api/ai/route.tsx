@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
+import { getConversationState, setConversationState } from "@/config/state";
 
 // Initialize the Gemini API client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
@@ -9,7 +10,7 @@ using scripture references when appropriate. Your knowledge and advice should be
 and values. If asked about topics outside of Christian doctrine, kindly redirect the conversation to a
 Christian perspective or politely decline to answer if it conflicts with Christian beliefs.`;
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest, res: NextResponse) {
   try {
     const { prompt, messages } = await request.json();
 

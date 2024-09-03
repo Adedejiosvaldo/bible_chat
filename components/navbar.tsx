@@ -1,3 +1,4 @@
+"use client";
 import {
   Navbar as NextUINavbar,
   NavbarContent,
@@ -14,6 +15,14 @@ import { Input } from "@nextui-org/input";
 import { link as linkStyles } from "@nextui-org/theme";
 import NextLink from "next/link";
 import clsx from "clsx";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { Avatar } from "@nextui-org/avatar";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@nextui-org/dropdown";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
@@ -27,6 +36,8 @@ import {
 } from "@/components/icons";
 
 export const Navbar = () => {
+  const { data: session, status } = useSession();
+
   const searchInput = (
     <Input
       aria-label="Search"
@@ -48,6 +59,37 @@ export const Navbar = () => {
     />
   );
 
+  const authContent = (
+    <>
+      {status === "authenticated" && session?.user ? (
+        <Dropdown>
+          <DropdownTrigger>
+            <Avatar
+              as="button"
+              className="transition-transform"
+              color="secondary"
+              name={session.user.name || undefined}
+              size="sm"
+              src={session.user.image || undefined}
+            />
+          </DropdownTrigger>
+          <DropdownMenu aria-label="Profile Actions" variant="flat">
+            <DropdownItem key="profile" className="h-14 gap-2">
+              <p className="font-semibold">Signed in as</p>
+              <p className="font-semibold">{session.user.name}</p>
+            </DropdownItem>
+            <DropdownItem key="settings">My Settings</DropdownItem>
+            <DropdownItem key="logout" color="danger" onClick={() => signOut()}>
+              Log Out
+            </DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+      ) : (
+        <Button onClick={() => signIn()}>Sign In</Button>
+      )}
+    </>
+  );
+
   return (
     <NextUINavbar maxWidth="xl" position="sticky">
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
@@ -57,44 +99,73 @@ export const Navbar = () => {
             <p className="font-bold text-inherit">Bible Gem</p>
           </NextLink>
         </NavbarBrand>
+      </NavbarContent>
 
-        {/* Add this new NavbarContent for larger screens */}
-        <NavbarContent
-          className="hidden sm:flex basis-1/5 sm:basis-full"
-          justify="end"
-        >
-          <NavbarItem>
-            <ThemeSwitch />
-          </NavbarItem>
-        </NavbarContent>
-
-        {/* Modify this NavbarContent for smaller screens */}
-        <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
+      <NavbarContent
+        className="hidden sm:flex basis-1/5 sm:basis-full"
+        justify="end"
+      >
+        <NavbarItem>
           <ThemeSwitch />
-          {/* <NavbarMenuToggle /> */}
-        </NavbarContent>
+        </NavbarItem>
+        <NavbarItem>
+          {status === "authenticated" && session?.user ? (
+            <Dropdown>
+              <DropdownTrigger>
+                <Avatar
+                  as="button"
+                  className="transition-transform"
+                  color="secondary"
+                  name={session.user.name || undefined}
+                  size="sm"
+                  src={session.user.image || undefined}
+                />
+              </DropdownTrigger>
+              <DropdownMenu aria-label="Profile Actions" variant="flat">
+                <DropdownItem key="profile" className="h-14 gap-2">
+                  <p className="font-semibold">Signed in as</p>
+                  <p className="font-semibold">{session.user.name}</p>
+                </DropdownItem>
+                <DropdownItem key="settings">My Settings</DropdownItem>
+                <DropdownItem
+                  key="logout"
+                  color="danger"
+                  onClick={() => signOut()}
+                >
+                  Log Out
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          ) : (
+            <Button onClick={() => signIn()}>Sign In</Button>
+          )}
+        </NavbarItem>
+      </NavbarContent>
+
+      <NavbarContent className="sm:hidden" justify="end">
+        <NavbarMenuToggle />
       </NavbarContent>
 
       <NavbarMenu>
         {searchInput}
-        <div className="mx-4 mt-2 flex flex-col gap-2">
-          {siteConfig.navMenuItems.map((item, index) => (
-            <NavbarMenuItem key={`${item}-${index}`}>
-              <Link
-                color={
-                  index === 2
-                    ? "primary"
-                    : index === siteConfig.navMenuItems.length - 1
-                    ? "danger"
-                    : "foreground"
-                }
-                href="#"
-                size="lg"
-              >
-                {item.label}
-              </Link>
-            </NavbarMenuItem>
-          ))}
+        <div className="mx-4 mt-2 flex flex-col items-start gap-2">
+          <NavbarMenuItem>
+            <ThemeSwitch />
+          </NavbarMenuItem>
+          <NavbarMenuItem>
+            {status === "authenticated" && session?.user ? (
+              <div>
+                <p className="font-semibold">
+                  Signed in as {session.user.name}
+                </p>
+                <Button color="danger" onClick={() => signOut()}>
+                  Log Out
+                </Button>
+              </div>
+            ) : (
+              <Button onClick={() => signIn()}>Sign In</Button>
+            )}
+          </NavbarMenuItem>
         </div>
       </NavbarMenu>
     </NextUINavbar>
