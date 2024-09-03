@@ -4,6 +4,7 @@ import { Avatar } from "@nextui-org/avatar";
 import React, { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import { useTheme } from "next-themes";
+import { useSession } from "next-auth/react";
 
 import { aiAvatar, userAvatar } from "@/public/images";
 
@@ -23,6 +24,8 @@ const InputComponent = ({
   messages,
   isLoading,
 }: InputComponentProps) => {
+  const { data: session } = useSession();
+
   const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
@@ -73,7 +76,11 @@ const InputComponent = ({
               } items-start max-w-[90%] sm:max-w-[80%]`}
             >
               <Avatar
-                src={message.role === "user" ? userAvatar.src : aiAvatar.src}
+                src={
+                  message.role === "user"
+                    ? session?.user?.image || userAvatar.src
+                    : aiAvatar.src
+                }
                 size="sm"
                 className={`${
                   message.role === "user" ? "ml-2" : "mr-2"
