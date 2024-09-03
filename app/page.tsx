@@ -47,6 +47,7 @@ export default function Home() {
           </p>
         </div>
       )}
+
       <InputComponent onSubmit={handleNewMessage} messages={messages} />
     </main>
   );
