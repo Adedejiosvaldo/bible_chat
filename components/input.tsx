@@ -13,13 +13,17 @@ interface Message {
 }
 
 interface InputComponentProps {
-  onSubmit: (newMessage: Message) => void;
+  onSubmit: (content: string) => void;
+  isLoading: boolean;
   messages: Message[];
 }
 
-const InputComponent = ({ onSubmit, messages }: InputComponentProps) => {
+const InputComponent = ({
+  onSubmit,
+  messages,
+  isLoading,
+}: InputComponentProps) => {
   const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
 
@@ -40,37 +44,10 @@ const InputComponent = ({ onSubmit, messages }: InputComponentProps) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    setIsLoading(true);
-    const userMessage: Message = { role: "user", content: inputValue };
-    onSubmit(userMessage);
+    onSubmit(inputValue);
     setInputValue("");
 
-    try {
-      const response = await fetch("/api/ai", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt: inputValue, messages }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const aiMessage: Message = { role: "ai", content: data.generatedText };
-        onSubmit(aiMessage);
-      } else {
-        throw new Error(data.error || "An error occurred");
-      }
-    } catch (error) {
-      onSubmit({
-        role: "ai",
-        content:
-          "I apologize, but I'm having trouble generating a response right now. Please try again later or rephrase your question.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    // Remove the API call from here, as it should be handled in the parent component
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

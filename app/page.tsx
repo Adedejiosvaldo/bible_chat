@@ -10,10 +10,17 @@ interface Message {
   content: string;
 }
 
+// Update the InputComponent props type
+interface InputComponentProps {
+  onSubmit: (content: string) => void;
+  messages: Message[];
+}
+
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const { data: session, status } = useSession();
   const [showWarning, setShowWarning] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -23,8 +30,32 @@ export default function Home() {
     }
   }, [status]);
 
-  const handleNewMessage = (newMessage: Message) => {
+  const handleNewMessage = async (newMessageContent: string) => {
+    setIsLoading(true);
+
+    const newMessage: Message = { role: "user", content: newMessageContent };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    // Send the entire conversation history to the API
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ messages: [...messages, newMessage] }),
+    });
+
+    // Process the response and add the AI's reply
+    if (response.ok) {
+      const data = await response.json();
+      const aiMessage: Message = { role: "ai", content: data.generatedText };
+      setMessages((prevMessages) => [...prevMessages, aiMessage]);
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
+
+      console.error("Failed to get AI response");
+    }
   };
 
   return (
@@ -47,8 +78,16 @@ export default function Home() {
           </p>
         </div>
       )}
+      {/* <InputComponent
+        onSubmit={(content: string) => handleNewMessage(content)}
+      /> */}
+      <InputComponent
+        onSubmit={(content: string) => handleNewMessage(content)}
+        messages={messages}
+        isLoading={isLoading}
+      />
 
-      <InputComponent onSubmit={handleNewMessage} messages={messages} />
+      {/* <InputComponent onSubmit={handleNewMessage} messages={messages} /> */}
     </main>
   );
 }
