@@ -1,8 +1,7 @@
-import { NextApiRequest } from "next";
 import { getToken } from "next-auth/jwt";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextApiRequest) {
-  const token = await getToken({ req });
+export async function GET(request: NextRequest) {
+  const token = await getToken({ req: request as any });
   return NextResponse.json({ token });
 }
