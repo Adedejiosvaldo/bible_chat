@@ -10,6 +10,8 @@ import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
 import AuthProvider from "./auth/Provider";
+import Sidebar from "@/components/sidebar";
+import LayoutWrapper from "./sidebar/provider";
 
 export const metadata: Metadata = {
   title: {
@@ -47,9 +49,25 @@ export default function RootLayout({
           <AuthProvider>
             <div className="relative flex flex-col h-screen">
               <Navbar />
-              <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
-                {children}
-              </main>
+              {/* <div className="flex min-h-screen">
+                {/* <Sidebar />
+                <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
+                  {children}
+                </main> */}
+              {/* </div> */}
+              {/*
+              <div className="flex min-h-screen">
+                <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+                <main
+                  className={`flex-1 transition-margin duration-300 ease-in-out ${
+                    isSidebarOpen ? "ml-64" : "ml-0"
+                  } p-4`}
+                >
+                  {children}
+                </main>
+              </div> */}
+
+              <LayoutWrapper>{children}</LayoutWrapper>
             </div>
           </AuthProvider>
         </Providers>

@@ -1,10 +1,23 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import prisma from "@/prisma/client";
+import { Session } from "next-auth";
+
+interface CustomSession extends Session {
+  user?: {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
+}
 
 // Initialize the Gemini API client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
 
-const CHRISTIAN_CONTEXT = `You are a compassionate Christian AI assistant. Your responses should:
+const CHRISTIAN_CONTEXT = `You are a compassionate Christian AI assistant. Your name is Bibion, Your responses should:
 1. Reflect Christian values and teachings, using Scripture when relevant.
 2. Be warm and friendly, as if talking to a close friend.
 3. Show empathy and understanding towards the user's situation.
@@ -22,23 +35,13 @@ Important guidelines:
 
 Your primary goal is to provide biblically sound guidance and support within the context of Christianity.`;
 
-export async function POST(request: NextRequest, res: NextResponse) {
+export async function POST(request: NextRequest) {
   try {
-    const { messages } = await request.json();
+    const { messages, chatId } = await request.json();
+    const session = (await getServerSession(authOptions)) as CustomSession;
 
-    // Check if messages are provided
-    if (!messages || messages.length === 0) {
-      return NextResponse.json(
-        { error: "Messages are required" },
-        { status: 400 }
-      );
-    }
-
-    // Generate content using Gemini
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-
-    // Create a chat session with all messages
-    const chat = model.startChat({
+    const aiChat = model.startChat({
       history: [
         {
           role: "user",
@@ -62,19 +65,69 @@ export async function POST(request: NextRequest, res: NextResponse) {
       },
     });
 
-    // Send the last message and get the response
-    const result = await chat.sendMessage(
+    const result = await aiChat.sendMessage(
       messages[messages.length - 1].content
     );
     const response = result.response;
     const text = response.text();
 
-    return NextResponse.json({ generatedText: text });
-  } catch (error) {
-    console.error("Error generating text:", error);
+    let newChatId = chatId;
+
+    // If the user is authenticated and there's no chatId, create a new chat
+    if (session?.user && !chatId) {
+      const newChat = await prisma.chat.create({
+        data: {
+          user: {
+            connect: { email: session.user.email! },
+          },
+        },
+      });
+      newChatId = newChat.id;
+    }
+
+    // If the user is authenticated, save the new message and AI response
+    if (session?.user) {
+      await saveMessages(
+        session.user.email!,
+        messages[0].content,
+        text,
+        newChatId
+      );
+    }
+
+    // Prepare and return the response
+    return NextResponse.json({
+      generatedText: text,
+      chatId: newChatId,
+    });
+  } catch (error: any) {
+    console.error("API route error:", error);
     return NextResponse.json(
-      { error: "Failed to generate text" },
+      { error: "An unexpected error occurred", details: error.message },
       { status: 500 }
     );
   }
+}
+
+async function saveMessages(
+  userEmail: string,
+  userContent: string,
+  aiContent: string,
+  chatId: string
+) {
+  // Save only the new user message and AI response
+  await prisma.message.createMany({
+    data: [
+      {
+        content: userContent,
+        role: "USER",
+        chatId: chatId,
+      },
+      {
+        content: aiContent,
+        role: "AI",
+        chatId: chatId,
+      },
+    ],
+  });
 }

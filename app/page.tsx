@@ -4,16 +4,11 @@ import { useState, useEffect } from "react";
 import { useSession, signIn } from "next-auth/react";
 import InputComponent from "@/components/input";
 import { Button } from "@nextui-org/button";
+import { useRouter } from "next/navigation";
 
 interface Message {
   role: "user" | "ai";
   content: string;
-}
-
-// Update the InputComponent props type
-interface InputComponentProps {
-  onSubmit: (content: string) => void;
-  messages: Message[];
 }
 
 export default function Home() {
@@ -21,13 +16,10 @@ export default function Home() {
   const { data: session, status } = useSession();
   const [showWarning, setShowWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      setShowWarning(true);
-    } else {
-      setShowWarning(false);
-    }
+    setShowWarning(status === "unauthenticated");
   }, [status]);
 
   const handleNewMessage = async (newMessageContent: string) => {
@@ -36,25 +28,37 @@ export default function Home() {
     const newMessage: Message = { role: "user", content: newMessageContent };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
 
-    // Send the entire conversation history to the API
-    const response = await fetch("/api/ai", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ messages: [...messages, newMessage] }),
-    });
+    try {
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messages: [...messages, newMessage],
+          chatId: null,
+        }),
+      });
 
-    // Process the response and add the AI's reply
-    if (response.ok) {
+      if (!response.ok) throw new Error("Failed to get AI response");
+
       const data = await response.json();
       const aiMessage: Message = { role: "ai", content: data.generatedText };
-      setMessages((prevMessages) => [...prevMessages, aiMessage]);
-      setIsLoading(false);
-    } else {
-      setIsLoading(false);
+      const updatedMessages = [...messages, newMessage, aiMessage];
 
-      console.error("Failed to get AI response");
+      // If authenticated and a chatId is returned, redirect to the new chat
+      if (status === "authenticated" && data.chatId) {
+        const encodedMessages = encodeURIComponent(
+          JSON.stringify(updatedMessages)
+        );
+        router.push(`/chats/${data.chatId}?messages=${encodedMessages}`);
+      } else {
+        setMessages(updatedMessages);
+      }
+    } catch (error) {
+      console.error("Error in AI response:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -63,7 +67,7 @@ export default function Home() {
       <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-8 text-center">
         Christian AI Chat
       </h1>
-      {status === "authenticated" && session.user?.name && (
+      {status === "authenticated" && session?.user?.name && (
         <p className="text-lg mb-4">Welcome, {session.user.name}!</p>
       )}
       {showWarning && (
@@ -78,16 +82,12 @@ export default function Home() {
           </p>
         </div>
       )}
-      {/* <InputComponent
-        onSubmit={(content: string) => handleNewMessage(content)}
-      /> */}
+
       <InputComponent
-        onSubmit={(content: string) => handleNewMessage(content)}
+        onSubmit={handleNewMessage}
         messages={messages}
         isLoading={isLoading}
       />
-
-      {/* <InputComponent onSubmit={handleNewMessage} messages={messages} /> */}
     </main>
   );
 }
