@@ -107,7 +107,7 @@ export default function Sidebar({
                     href={`/chats/${chat.id}`}
                     className="block p-2 rounded hover:bg-accent/10 transition-colors"
                   >
-                    Chat {chat.id.slice(0, 8)}...
+                    {chat.title}
                   </Link>
                 </li>
               ))}

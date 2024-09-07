@@ -40,6 +40,14 @@ export async function POST(request: NextRequest) {
     const { messages, chatId } = await request.json();
     const session = (await getServerSession(authOptions)) as CustomSession;
 
+    if (!process.env.GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY is not set");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const aiChat = model.startChat({
       history: [
@@ -65,31 +73,43 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    console.log("AI Input:", JSON.stringify(messages, null, 2));
+
     const result = await aiChat.sendMessage(
       messages[messages.length - 1].content
     );
     const response = result.response;
     const text = response.text();
 
+    console.log("AI Response:", text);
+
     let newChatId = chatId;
+    let title = "";
 
-    // If the user is authenticated and there's no chatId, create a new chat
-    if (session?.user && !chatId) {
-      const newChat = await prisma.chat.create({
-        data: {
-          user: {
-            connect: { email: session.user.email! },
-          },
-        },
-      });
-      newChatId = newChat.id;
-    }
-
-    // If the user is authenticated, save the new message and AI response
+    // Only create a new chat and save messages if the user is authenticated
     if (session?.user) {
+      if (!chatId) {
+        const titleResult = await model.generateContent(
+          `Generate a short, catchy title (max 6 words) for a Christian conversation that starts with this message: "${
+            messages[messages.length - 1].content
+          }"`
+        );
+        title = titleResult.response.text().replace(/^"(.*)"$/, "$1");
+
+        const newChat = await prisma.chat.create({
+          data: {
+            user: {
+              connect: { email: session.user.email! },
+            },
+            title: title,
+          },
+        });
+        newChatId = newChat.id;
+      }
+
       await saveMessages(
         session.user.email!,
-        messages[0].content,
+        messages[messages.length - 1].content,
         text,
         newChatId
       );
@@ -99,9 +119,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       generatedText: text,
       chatId: newChatId,
+      title: title,
     });
   } catch (error: any) {
     console.error("API route error:", error);
+    console.error(error.stack);
     return NextResponse.json(
       { error: "An unexpected error occurred", details: error.message },
       { status: 500 }
@@ -115,7 +137,6 @@ async function saveMessages(
   aiContent: string,
   chatId: string
 ) {
-  // Save only the new user message and AI response
   await prisma.message.createMany({
     data: [
       {
