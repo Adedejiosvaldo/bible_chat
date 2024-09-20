@@ -14,14 +14,23 @@ export default function LayoutWrapper({
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+      {/* Overlay for mobile view */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black opacity-50 z-40"
+          onClick={toggleSidebar} // Close sidebar when clicking on overlay
+        />
+      )}
+
       <main
         className={`flex-1 transition-margin duration-300 ease-in-out ${
-          isSidebarOpen ? "ml-64" : "ml-0"
+          isSidebarOpen ? "ml-64 md:ml-0 sm:ml-0" : "ml-0"
         } p-4`}
       >
         {children}
       </main>
+
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
     </div>
   );
 }

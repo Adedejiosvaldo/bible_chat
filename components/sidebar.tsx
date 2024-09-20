@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Button, Link, Spinner } from "@nextui-org/react";
+import { Button, Spinner } from "@nextui-org/react";
+import Link from "next/link";
 
 interface Chat {
   id: string;
@@ -21,6 +22,12 @@ export default function Sidebar({
   const [isLoading, setIsLoading] = useState(true);
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const handleMobileToggle = () => {
+    setIsMobileOpen(!isMobileOpen);
+  };
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -57,44 +64,33 @@ export default function Sidebar({
 
   return (
     <>
+      {/* Mobile toggle button
       <button
-        onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 p-2 bg-background rounded-full shadow-md"
+        onClick={handleMobileToggle}
+        className="md:hidden fixed top-4 left-4 z-50"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M4 6h16M4 12h16M4 18h16"
-          />
-        </svg>
+        {isMobileOpen ? "Close" : "Open"} Sidebar
       </button>
+
+      {/* Overlay for mobile view */}
+      {/* {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black opacity-50 z-40"
+          onClick={handleMobileToggle} // Close sidebar when clicking on overlay
+        />
+      )} */}
+
       <div
         className={`
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
         transition-transform duration-300 ease-in-out
         fixed left-0 top-0 w-64 h-screen bg-background shadow-lg z-40
-        flex flex-col
+        flex flex-col md:block ${isOpen ? "block" : "hidden"}
+
       `}
       >
-        <div className="p-4 border-b border-divider">
-          <Button
-            onClick={startNewChat}
-            color="primary"
-            className="w-full"
-            disabled={status !== "authenticated"}
-          >
-            New Chat
-          </Button>
-        </div>
-        <div className="flex-grow overflow-y-auto p-4">
+        <div className="flex-grow overflow-y-auto p-4 mt-3">
+          {/* <h2>All Chats</h2> */}
           {isLoading ? (
             <div className="flex justify-center items-center h-32">
               <Spinner />
@@ -105,7 +101,9 @@ export default function Sidebar({
                 <li key={chat.id}>
                   <Link
                     href={`/chats/${chat.id}`}
-                    className="block p-2 rounded hover:bg-accent/10 transition-colors"
+                    className="block p-4 mb-2 border-b border-white dark:text-white dark:hover:border-zinc-900 hover:text-zinc-800 transition-colors duration-200 ease-in-out white:text-black white:border-black white:hover:border-zinc-300 white:hover:text-zinc-600"
+
+                    // className="block p-4 mb-2 text-white border-b border-white hover:border-zinc-900 hover:text-zinc-800 transition-colors duration-200 ease-in-out"
                   >
                     {chat.title}
                   </Link>
@@ -118,7 +116,53 @@ export default function Sidebar({
             </p>
           )}
         </div>
+        {/* {status === "authenticated" && (
+          <div className="p-4 border-t border-divider">
+            <Button onClick={startNewChat} color="primary" className="w-full">
+              New Chat
+            </Button>
+          </div>
+        )} */}
       </div>
+
+      {status === "authenticated" && (
+        <button
+          onClick={toggleSidebar}
+          className="fixed bottom-4 left-16 z-50 p-2 bg-background rounded-full shadow-md"
+        >
+          {isOpen ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          )}
+        </button>
+      )}
     </>
   );
 }

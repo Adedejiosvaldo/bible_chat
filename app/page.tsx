@@ -40,7 +40,18 @@ export default function Home() {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to get AI response");
+      console.log(response);
+
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        throw new Error(
+          `Failed to get AI response. Status: ${
+            response.status
+          }, Status Text: ${response.statusText}, Error Message: ${{
+            ...errorResponse,
+          }}`
+        );
+      }
 
       const data = await response.json();
       const aiMessage: Message = { role: "ai", content: data.generatedText };
@@ -55,8 +66,8 @@ export default function Home() {
       } else {
         setMessages(updatedMessages);
       }
-    } catch (error) {
-      console.error("Error in AI response:", error);
+    } catch (error: any) {
+      console.error("Error in AI response:", error.message);
     } finally {
       setIsLoading(false);
     }

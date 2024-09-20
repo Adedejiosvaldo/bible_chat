@@ -9,7 +9,7 @@ interface CustomSession extends Session {
     name?: string | null;
     email?: string | null;
     image?: string | null;
-  };        
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
     // Create a new chat for the user
     const newChat = await prisma.chat.create({
       data: {
+        title: "Gods",
         user: {
           connect: { id: user.id },
         },
