@@ -168,7 +168,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth";
 import prisma from "@/prisma/client";
 import { Session } from "next-auth";
 
