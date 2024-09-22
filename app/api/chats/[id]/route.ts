@@ -35,7 +35,7 @@ export async function GET(
     });
 
     return NextResponse.json({
-      messages: messages.map((msg) => ({
+      messages: messages.map((msg:any) => ({
         role: msg.role.toLowerCase(),
         content: msg.content,
       })),
