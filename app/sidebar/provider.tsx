@@ -19,6 +19,14 @@ export default function LayoutWrapper({
         <div
           className="fixed inset-0 bg-black opacity-50 z-40"
           onClick={toggleSidebar}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              toggleSidebar();
+            }
+          }}
+          aria-label="Close sidebar overlay"
         />
       )}
 
