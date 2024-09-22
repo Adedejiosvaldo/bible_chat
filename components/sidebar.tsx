@@ -110,6 +110,7 @@ export default function Sidebar({
 
       {status === "authenticated" && (
         <button
+          role="button"
           onClick={toggleSidebar}
           aria-label={isOpen ? "Close Sidebar" : "Open Sidebar"}
           className="fixed bottom-4 left-16 z-50 p-2 bg-background rounded-full shadow-md"
