@@ -18,7 +18,7 @@ export default function LayoutWrapper({
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black opacity-50 z-40"
-          onClick={toggleSidebar} // Close sidebar when clicking on overlay
+          onClick={toggleSidebar}
         />
       )}
 
