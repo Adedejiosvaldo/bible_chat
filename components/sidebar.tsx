@@ -64,22 +64,6 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Mobile toggle button
-      <button
-        onClick={handleMobileToggle}
-        className="md:hidden fixed top-4 left-4 z-50"
-      >
-        {isMobileOpen ? "Close" : "Open"} Sidebar
-      </button>
-
-      {/* Overlay for mobile view */}
-      {/* {isMobileOpen && (
-        <div
-          className="fixed inset-0 bg-black opacity-50 z-40"
-          onClick={handleMobileToggle} // Close sidebar when clicking on overlay
-        />
-      )} */}
-
       <div
         className={`
         ${isOpen ? "translate-x-0" : "-translate-x-full"}
@@ -90,7 +74,6 @@ export default function Sidebar({
       `}
       >
         <div className="flex-grow overflow-y-auto p-4 mt-3">
-          {/* <h2>All Chats</h2> */}
           {isLoading ? (
             <div className="flex justify-center items-center h-32">
               <Spinner />
@@ -128,6 +111,7 @@ export default function Sidebar({
       {status === "authenticated" && (
         <button
           onClick={toggleSidebar}
+          aria-label={isOpen ? "Close Sidebar" : "Open Sidebar"}
           className="fixed bottom-4 left-16 z-50 p-2 bg-background rounded-full shadow-md"
         >
           {isOpen ? (
