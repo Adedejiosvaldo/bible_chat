@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Button, Spinner } from "@nextui-org/react";
 import Link from "next/link";
 
@@ -22,6 +22,8 @@ export default function Sidebar({
   const [isLoading, setIsLoading] = useState(true);
   const { data: session, status } = useSession();
   const router = useRouter();
+
+  const pathname = usePathname();
 
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -50,6 +52,12 @@ export default function Sidebar({
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchChats();
+    }
+  }, [pathname, status]);
 
   const startNewChat = async () => {
     try {

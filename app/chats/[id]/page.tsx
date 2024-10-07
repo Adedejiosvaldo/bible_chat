@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import InputComponent from "@/components/input";
@@ -13,15 +13,18 @@ interface Message {
 
 export default function ChatPage() {
   const { id: chatId } = useParams();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { data: session, status } = useSession();
+  const [initialMessagesSet, setInitialMessagesSet] = useState(false);
 
   useEffect(() => {
     const initialMessages = searchParams.get("messages");
     if (initialMessages) {
       setMessages(JSON.parse(decodeURIComponent(initialMessages)));
+      router.replace(`/chats/${chatId}`);
     } else if (chatId) {
       fetchMessages();
     }
