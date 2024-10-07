@@ -8,4 +8,10 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
+  secret: process.env.NEXTAUTH_SECRET, // Ensure this is set
+  callbacks: {
+    async redirect({ url, baseUrl }) {
+      return baseUrl; // Control where users are redirected after signing in
+    },
+  },
 };
